@@ -14,3 +14,13 @@
 Route::get('/', function () {
     return view('welcome');
 });
+
+
+Route::get('/questions', 'QuestionController@index');
+Route::get('/questions/create', 'QuestionController@create');
+Route::post('/questions', 'QuestionController@store');
+
+
+Route::get('/answers', 'AnswerController@index');
+Route::get('/answers/create', 'AnswerController@create');
+Route::post('/answers', 'AnswerController@store');

@@ -16,3 +16,14 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
+Route::get('/questions', function (Request $request) {
+    return \App\Question::all();
+});
+
+Route::get('/answers', function (Request $request) {
+
+
+    return \App\Answer::all();
+});
