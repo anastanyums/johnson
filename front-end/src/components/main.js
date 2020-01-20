@@ -1,7 +1,7 @@
 import React, { Component, Fragment } from 'react'
 import Pic from './pic'
-import {questions} from "./questions"
-import {answers} from './answers'
+import axios from 'axios'
+
 
 
 
@@ -11,8 +11,8 @@ export default class Main extends Component {
     super(props);
     this.state = {
         start: false,
-        questions,
-        answers,
+        questions: null,
+        answers: null,
         current: 0,
         points: 0,
         time: 20,
@@ -22,7 +22,30 @@ export default class Main extends Component {
 
   }
 
-  startTimer() {
+  componentWillMount() {
+      let questions
+      let answers
+
+      axios.get('http://127.0.0.1:8000/api/questions',{headers: {"Access-Control-Allow-Origin": "*"}})
+          .then(res => {
+              questions = res.data
+
+              axios.get('http://127.0.0.1:8000/api/answers',{headers: {"Access-Control-Allow-Origin": "*"}})
+                  .then(res => {
+                      answers = res.data
+
+                      this.setState({
+                          questions,
+                          answers
+                      })
+
+                  })
+          })
+
+
+  }
+
+    startTimer() {
       
     let time = setInterval(() => {
       this.setState({
@@ -40,7 +63,7 @@ export default class Main extends Component {
   };
 
   startGame () {
-   
+
       this.setState({
           start: true,
           current: 0,
@@ -48,7 +71,8 @@ export default class Main extends Component {
           time: 20
       }, () => {
           this.setState({
-            choices: this.getChoices()
+              questions: this.shuffle(this.state.questions),
+              choices: this.getChoices()
           })
           this.startTimer()
       })
@@ -95,12 +119,14 @@ next () {
 
     let answers = this.state.answers
 
+      console.log(answers)
+
     let choices = [
-        answers[this.state.questions[this.state.current].answer]      
+        answers[this.state.questions[this.state.current].answer_id]
     ]
 
     choices.push(this.randPick(answers, choices))
-    choices.push(this.randPick(answers, choices))   
+    choices.push(this.randPick(answers, choices))
 
     return this.shuffle(choices)
 
@@ -108,7 +134,7 @@ next () {
 
 
   randPick (arr,excludeArr){
-    var rand = Math.floor(Math.random()*arr.length);
+    let rand = Math.floor(Math.random()*arr.length);
     if(!excludeArr.indexOf(arr[rand])){
         return this.randPick(arr,excludeArr);
     }else{
@@ -125,7 +151,7 @@ next () {
                <Fragment>
                  
                     {
-                        this.state.finsih ?
+                        this.state.finsih && this.state.questions?
                         <Fragment>
                             <h5 className="score">Your score is : {this.state.points} / {this.state.questions.length*5}</h5>
                             <h7 className="heading">Invention and Inventors ! </h7>
@@ -142,45 +168,52 @@ next () {
                </Fragment>
 
                 :
+                   <Fragment>
+                       {
+                           this.state.questions ?
+                               <div className='container'>
+                                   <div >
+                                       <h3 className='hedding'> { this.state.questions[this.state.current].name } </h3>
+                                       <h4 className='question'>Invented by whom ?</h4>
+                                       <h4 className='question-number'> {this.state.current + 1} </h4>
+                                   </div>
 
-                <div className='container'>
-                    <div >
-                        <h3 className='hedding'> { this.state.questions[this.state.current].name } </h3>
-                        <h4 className='question'>Invented by whom ?</h4>
-                        <h4 className='question-number'> {this.state.current + 1} </h4>
-                    </div>
-
-                    <div>
-                        <div className='question-con'>
-                            <img 
-                            src={require(`./q-img/${this.state.questions[this.state.current].img}`)} 
-                            alt='question' 
-                            className='question-img' 
-                            style={{width:'8rem', height:'10rem'}}/>
-                        </div>
-                        <div className='info-con'>
-                            <h4>Your points : {this.state.points}</h4>
-                            <h5>Time remaining : {this.state.time}</h5>
-                        </div>
-                    </div>
+                                   <div>
+                                       <div className='question-con'>
+                                          <img
+                                               src={require(`./q-img/${this.state.questions[this.state.current].pic}`)}
+                                               alt='question'
+                                               className='question-img'
+                                               style={{width:'8rem', height:'10rem'}}/>
+                                       </div>
+                                       <div className='info-con'>
+                                           <h4>Your points : {this.state.points}</h4>
+                                           <h5>Time remaining : {this.state.time}</h5>
+                                       </div>
+                                   </div>
 
 
-                    <div className='answer-con'>
-                        {
-                            this.state.choices.map((item, key) => {
-                                return <Pic
-                                onClick={ () => this.answerClick(item.num) }
-                                name ={item.name}
-                                img={item.img}
-                                key={key}/>
-                            })
-                        }
-              
-                    </div>
-                       
-                    
-                    
-                </div>
+                                   <div className='answer-con'>
+                                       {
+                                           this.state.choices.map((item, key) => {
+                                               return <Pic
+                                                   onClick={ () => this.answerClick(item.id) }
+                                                   name ={item.name}
+                                                   img={item.pic}
+                                                   key={key}/>
+                                           })
+                                       }
+
+                                   </div>
+
+
+
+                               </div>
+                               :null
+                       }
+
+                   </Fragment>
+
 
            }
            
